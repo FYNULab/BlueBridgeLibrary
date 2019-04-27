@@ -1,0 +1,104 @@
+C51 COMPILER V9.01   APP                                                                   05/16/2018 17:45:05 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE APP
+OBJECT MODULE PLACED IN .\output\APP.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE USER_APP\APP.c OMF2 BROWSE INCDIR(.\Device;.\Driver;.\system;.\USER_APP)
+                    - DEBUG PRINT(.\APP.lst) OBJECT(.\output\APP.obj)
+
+line level    source
+
+   1          #include "common.h"
+   2          
+   3          void USER_INIT(void)
+   4          {
+   5   1              DIS_ROM_Init();//缓存区初始化
+   6   1              FAC_CLS();//附加设备初始化 
+   7   1              LED_CLS();//LED模块初始化
+   8   1      
+   9   1              LED_ENABLE=0;//LED使能位  1开启 0关闭
+  10   1              ROLL_CRL=0;//流水灯功能开关
+  11   1              LED_S=0;//LED初始动作位置
+  12   1              Flashing_Cycle=0;//闪烁间隔  单位ms
+  13   1      
+  14   1              set_1302(23,12,50);//DS1302时间设定，依次 时 分 秒
+  15   1      
+  16   1              init_pcf8591(POTENT_Rb2);//ADC8591初始化  当前选择RB2可调电阻
+  17   1              
+  18   1              Timer0Init_500us();//定时器中断设置
+  19   1              
+  20   1              PartDis_Manage(TIME_PART,"  -  -  ");//缓存区格式设定
+  21   1              PartDis_Manage(TEMP_PART,"  ------");
+  22   1              PartDis_Manage(SET_PART,"-    -  ");
+  23   1              PartDis_Manage(ADC_PART,"--      ");
+  24   1      }
+  25          
+  26          void KEYBOARD(void)
+  27          {
+  28   1              //按键功能管理  变量依次为 按键编号，功能，操作1，操作2(主)             
+  29   1              KEYFunc_Manager(4,PART_SWC,TEMP_PART,TIME_PART);
+  30   1              KEYFunc_Manager(5,PART_SWC,SET_PART,ADC_PART);
+  31   1              KEYFunc_Manager(11,MA_INPUT,0,1);
+  32   1              KEYFunc_Manager(15,MA_INPUT,0,2);
+  33   1              KEYFunc_Manager(19,MA_INPUT,0,3);
+  34   1              KEYFunc_Manager(10,MA_INPUT,0,4);
+  35   1              KEYFunc_Manager(14,MA_INPUT,0,5);
+  36   1              KEYFunc_Manager(18,MA_INPUT,0,6);
+  37   1              KEYFunc_Manager(9,MA_INPUT,0,7);
+  38   1              KEYFunc_Manager(13,MA_INPUT,0,8);
+  39   1              KEYFunc_Manager(17,MA_INPUT,0,9);
+  40   1              KEYFunc_Manager(12,MA_INPUT,0,0);
+  41   1      
+  42   1      }
+  43          
+  44          void APP(void)
+  45          {
+  46   1                      REED_INPUT_KEY();//读取按键
+  47   1                      READ_18B20();//读取18b20
+  48   1                      READ_DS1302();//读取1302
+  49   1                      READ_ADC();//读取AD
+  50   1      //              READ_ULTR();//读取超声波距离，使用时会少许干扰主时序
+  51   1                      //附加设备功能管理  变量依次为 设备名称，检测数值，阀值，阀值以上或以下触发动作，所用标志位
+  52   1                      FACAction_Manager(RELAY_,adc_value,150,UP,RELAY_F);
+  53   1      //
+  54   1                      KEYBOARD();
+C51 COMPILER V9.01   APP                                                                   05/16/2018 17:45:05 PAGE 2   
+
+  55   1      
+  56   1                      //数据显示功能管理  变量依次为 缓存区域，显示变量，数据位数，数据首部所在位置 
+  57   1                      DataDis_Manage(TIME_PART,_HOUR,2,0);
+  58   1                      DataDis_Manage(TIME_PART,_MINUTE,2,3);
+  59   1                      DataDis_Manage(TIME_PART,_SECOND,2,6);
+  60   1                      DataDis_Manage(ADC_PART,adc_value,3,3);
+  61   1                              
+  62   1                      DataDis_Manage(SET_PART,keybuf[0],1,1);
+  63   1                      DataDis_Manage(SET_PART,keybuf[1],1,2);
+  64   1                      DataDis_Manage(SET_PART,keybuf[2],1,6);                    
+  65   1                      DataDis_Manage(SET_PART,keybuf[3],1,7);
+  66   1                      
+  67   1                      DataDis_Manage(TEMP_PART,TEMperature,2,0);
+  68   1                      SMGFlash_Manage(TIME_PART);//数码管横杠闪烁   变量为 功能页             
+  69   1                      
+  70   1      
+  71   1                      LED_STA_CHANGE(LED_S);//LED状态刷新
+  72   1                      OS_Display();//系统显示刷新
+  73   1                      LED_ACTION();//LED动作刷新
+  74   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    404    ----
+   CONSTANT SIZE    =     36    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

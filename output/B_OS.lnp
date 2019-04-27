@@ -1,0 +1,15 @@
+".\output\STARTUP.obj",
+".\output\OS_main.obj",
+".\output\APP.obj",
+".\output\ds1302.obj",
+".\output\onewire.obj",
+".\output\D_i2c.obj",
+".\output\ultrasonic.obj",
+".\output\B_KEY.obj",
+".\output\B_LED.obj",
+".\output\B_smg.obj",
+".\output\FAC_operat.obj",
+".\output\OS_timer.obj" 
+TO ".\output\B_OS" 
+
+PRINT(".\B_OS.map") REMOVEUNUSED 

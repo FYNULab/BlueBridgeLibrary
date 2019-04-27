@@ -1,0 +1,144 @@
+C51 COMPILER V9.01   ONEWIRE                                                               05/16/2018 17:45:05 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE ONEWIRE
+OBJECT MODULE PLACED IN .\output\onewire.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Device\onewire.c OMF2 BROWSE INCDIR(.\Device;.\Driver;.\system;.\USER_AP
+                    -P) DEBUG PRINT(.\onewire.lst) OBJECT(.\output\onewire.obj)
+
+line level    source
+
+   1          /*
+   2            程序说明: 单总线驱动程序
+   3            软件环境: Keil uVision 4.10 
+   4            硬件环境: CT107单片机综合实训平台
+   5            日    期: 2011-8-9
+   6          */
+   7          
+   8          #include "common.h"
+   9          
+  10          #define uchar unsigned char
+  11          #define uint unsigned int
+  12          
+  13          uint8_t TEMperature;
+  14          //单总线延时函数
+  15          void Delay_OneWire(unsigned int t)
+  16          {
+  17   1              unsigned char i;
+  18   1              while(t--)
+  19   1              {
+  20   2              _nop_();
+  21   2              i = 11;
+  22   2              while (--i);
+  23   2              }
+  24   1      }
+  25          
+  26          //DS18B20芯片初始化
+  27          bit Init_DS18B20(void)
+  28          {
+  29   1              bit initflag = 0;
+  30   1              DQ = 1;
+  31   1              Delay_OneWire(12);
+  32   1              DQ = 0;
+  33   1              Delay_OneWire(80); 
+  34   1              DQ = 1;
+  35   1              Delay_OneWire(10); 
+  36   1              initflag = DQ;    
+  37   1              Delay_OneWire(5);
+  38   1        
+  39   1              return initflag;
+  40   1      }
+  41          
+  42          //通过单总线向DS18B20写一个字节
+  43          void Write_DS18B20(unsigned char dat)
+  44          {
+  45   1              unsigned char i;
+  46   1              for(i=0;i<8;i++)
+  47   1              {
+  48   2                      DQ = 0;
+  49   2                      DQ = dat&0x01;
+  50   2                      Delay_OneWire(5);
+  51   2                      DQ = 1;
+  52   2                      dat >>= 1;
+  53   2              }
+  54   1              Delay_OneWire(5);
+C51 COMPILER V9.01   ONEWIRE                                                               05/16/2018 17:45:05 PAGE 2   
+
+  55   1      }
+  56          
+  57          //从DS18B20读取一个字节
+  58          unsigned char Read_DS18B20(void)
+  59          {
+  60   1              unsigned char i;
+  61   1              unsigned char dat;
+  62   1        
+  63   1              for(i=0;i<8;i++)
+  64   1              {
+  65   2                      DQ = 0;
+  66   2                      dat >>= 1;
+  67   2                      DQ = 1;
+  68   2                      if(DQ)
+  69   2                      {
+  70   3                              dat |= 0x80;
+  71   3                      }           
+  72   2                      Delay_OneWire(5);
+  73   2              }
+  74   1              return dat;
+  75   1      }
+  76          
+  77          float read_temperature_f()
+  78          {
+  79   1              uint temp;
+  80   1              float temperature;
+  81   1              uchar low,high;
+  82   1      
+  83   1              ET0 = 0;
+  84   1              Init_DS18B20();
+  85   1              Write_DS18B20(0xcc);
+  86   1              Write_DS18B20(0x44);
+  87   1              Delay_OneWire(200);
+  88   1      
+  89   1              Init_DS18B20();
+  90   1              Write_DS18B20(0xcc);
+  91   1              Write_DS18B20(0xbe);
+  92   1      
+  93   1              low=Read_DS18B20();
+  94   1              high=Read_DS18B20();
+  95   1              ET0 = 1;
+  96   1      //      temp=(high<<4)|(low>>4);
+  97   1      //      return temp;
+  98   1              temp=high;
+  99   1              temp<<=8;
+ 100   1              temp|=low;
+ 101   1              temperature = temp*0.0625;
+ 102   1              return temperature;             
+ 103   1      }
+ 104          
+ 105          void READ_18B20(void)
+ 106          {
+ 107   1       if(MIS_TEMP&&READ_temp_E) 
+ 108   1              {
+ 109   2                      TEMperature=(uint8_t)(read_temperature_f());
+ 110   2                      CLS_MIS(MIS_TEMP);
+ 111   2              }
+ 112   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    204    ----
+C51 COMPILER V9.01   ONEWIRE                                                               05/16/2018 17:45:05 PAGE 3   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

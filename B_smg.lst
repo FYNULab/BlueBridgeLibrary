@@ -1,0 +1,192 @@
+C51 COMPILER V9.01   B_SMG                                                                 05/16/2018 17:45:06 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE B_SMG
+OBJECT MODULE PLACED IN .\output\B_smg.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Driver\B_smg.c OMF2 BROWSE INCDIR(.\Device;.\Driver;.\system;.\USER_APP)
+                    - DEBUG PRINT(.\B_smg.lst) OBJECT(.\output\B_smg.obj)
+
+line level    source
+
+   1          #include "common.h"
+   2          //{0,1,2,3,4,5,6,7,8,9,-,space,.}
+   3          code unsigned char SMG_TAB[]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90,0xbf,0xff,0x7f};
+   4          uint8_t PART_ROM[4][8];
+   5          uint8_t SMG_LAST_PART=0;
+   6          uint8_t dspbuf[8]={_SPACE_,_SPACE_,_SPACE_,_SPACE_,_SPACE_,_SPACE_,_SPACE_,_SPACE_};  //œ‘ æª∫≥Â«¯
+   7          uint8_t dspcom=0;
+   8          
+   9          bit READ_temp_E=0;
+  10          bit READ_time_E=0;
+  11          bit READ_ADC_E=0;
+  12          bit SET_DATA_E=0;
+  13          
+  14          
+  15          void DIS_ROM_Init(void)
+  16          {
+  17   1              uint8_t i,j;
+  18   1              for(i=0;i<4;i++)
+  19   1              {
+  20   2                      for(j=0;j<8;j++)
+  21   2                              PART_ROM[i][j]=_SPACE_;
+  22   2              }
+  23   1      }
+  24          
+  25          void OS_Display(void)
+  26          { 
+  27   1        if(MIS_DISPLAY) 
+  28   1              {               
+  29   2                      SELECT_SMG_D;
+  30   2                      OPERAT(SMG_TAB[_SPACE_]);
+  31   2                      SELECT_CLS;
+  32   2      
+  33   2                      OPERAT(1<<dspcom);      
+  34   2                      SELECT_SMG_W; 
+  35   2                      SELECT_CLS;
+  36   2              
+  37   2                      OPERAT(SMG_TAB[dspbuf[dspcom]]);        
+  38   2                      SELECT_SMG_D; 
+  39   2                      SELECT_CLS;
+  40   2              
+  41   2          if(++dspcom == 8)
+  42   2                      {
+  43   3              dspcom = 0;
+  44   3              }
+  45   2                      CLS_MIS(MIS_DISPLAY);
+  46   2              }               
+  47   1      }
+  48          
+  49          
+  50          void PartDis_Manage(uint8_t PART_NUM,uchar ch[])
+  51          {
+  52   1              uint8_t j=0;
+  53   1        while (ch[j]!='\0')
+  54   1        {
+C51 COMPILER V9.01   B_SMG                                                                 05/16/2018 17:45:06 PAGE 2   
+
+  55   2         if(ch[j]==' ')
+  56   2               {
+  57   3                       PART_ROM[PART_NUM][j]=_SPACE_;
+  58   3               }
+  59   2              if(ch[j]=='-')
+  60   2               {
+  61   3                       PART_ROM[PART_NUM][j]=_LINE_;
+  62   3               }       
+  63   2              j++;
+  64   2        }
+  65   1      
+  66   1      }
+  67          void SMGFlash_Manage(uint8_t PART_NUM)
+  68          {
+  69   1              uint8_t j;
+  70   1         if(_SECOND%2)
+  71   1        {
+  72   2           for(j=0;j<8;j++)
+  73   2               {
+  74   3                      if(PART_ROM[PART_NUM][j]==_LINE_)
+  75   3                      {
+  76   4                              PART_ROM[PART_NUM][j]=_SPACE_;
+  77   4                      }
+  78   3               }
+  79   2        }
+  80   1        else
+  81   1        {
+  82   2              for(j=0;j<8;j++)
+  83   2               {
+  84   3                      if(PART_ROM[PART_NUM][j]==_SPACE_)
+  85   3                      {
+  86   4                              PART_ROM[PART_NUM][j]=_LINE_;
+  87   4                      }
+  88   3               }
+  89   2        }
+  90   1      }
+  91          
+  92          void DataDis_Manage(uint8_t PART_NUM,uint16_t DATA,uint8_t DIG,uint8_t location)
+  93          {
+  94   1              uint8_t i=0,digit;
+  95   1              uint8_t tran[5];
+  96   1              
+  97   1      
+  98   1              tran[0]=DATA/10000;
+  99   1              tran[1]=(DATA%10000)/1000;
+ 100   1              tran[2]=(DATA%1000)/100;
+ 101   1              tran[3]=(DATA%100)/10;
+ 102   1              tran[4]=DATA%10;
+ 103   1              
+ 104   1              if(DIG==SELF_MOTION)
+ 105   1              {
+ 106   2                      while(tran[i++]==0);
+ 107   2                      digit=6-i;
+ 108   2              }
+ 109   1              else
+ 110   1              {
+ 111   2                      digit=DIG;
+ 112   2              }
+ 113   1              
+ 114   1                      for(i=5-digit;i<5;i++)
+ 115   1                        PART_ROM[PART_NUM][location++]=tran[i];
+ 116   1              
+C51 COMPILER V9.01   B_SMG                                                                 05/16/2018 17:45:06 PAGE 3   
+
+ 117   1      }
+ 118          
+ 119          
+ 120          void Switch_DISPart(uint8_t PART_NUM)
+ 121          {
+ 122   1              uint8_t i;
+ 123   1              for(i=0;i<8;i++)
+ 124   1              {
+ 125   2                      dspbuf[i]=PART_ROM[PART_NUM][i];
+ 126   2              }
+ 127   1              switch(PART_NUM)
+ 128   1              {
+ 129   2                      case TIME_PART:          
+ 130   2                              READ_temp_E=0;
+ 131   2                              READ_time_E=1;
+ 132   2                              READ_ADC_E=0;
+ 133   2                              SET_DATA_E=0;
+ 134   2                              break;
+ 135   2                      case TEMP_PART:
+ 136   2                              READ_temp_E=1;
+ 137   2                              READ_time_E=0;
+ 138   2                              READ_ADC_E=0;
+ 139   2                              SET_DATA_E=0;            
+ 140   2                              break;
+ 141   2                      case ADC_PART:  
+ 142   2                              READ_temp_E=0;
+ 143   2                              READ_time_E=0;
+ 144   2                              READ_ADC_E=1;
+ 145   2                              SET_DATA_E=0;    
+ 146   2                              break;
+ 147   2                      case SET_PART:
+ 148   2                              READ_temp_E=0;
+ 149   2                              READ_time_E=0;
+ 150   2                              READ_ADC_E=0;
+ 151   2                              SET_DATA_E=1;            
+ 152   2                              break;
+ 153   2                      default:
+ 154   2                              READ_temp_E=0;
+ 155   2                              READ_time_E=0;
+ 156   2                              READ_ADC_E=0;
+ 157   2                              SET_DATA_E=0;            
+ 158   2                              break;
+ 159   2              }
+ 160   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    475    ----
+   CONSTANT SIZE    =     13    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     42      14
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
